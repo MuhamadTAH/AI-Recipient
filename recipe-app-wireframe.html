@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🥘 Smart Recipe Improviser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            min-height: 600px;
+        }
+
+        .header {
+            background: #007AFF;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 3px solid #005bb5;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .page {
+            display: none;
+            padding: 20px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Home Page Styles */
+        .ingredient-section h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .ingredient-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .ingredient-input input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .add-btn {
+            background: #34C759;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .ingredients-display {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            min-height: 60px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .ingredient-tag {
+            background: #007AFF;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .remove-tag {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .find-recipes-btn {
+            width: 100%;
+            background: #FF9500;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .find-recipes-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Recipe Results Styles */
+        .recipe-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .recipe-item:hover {
+            background: #f8f9fa;
+        }
+
+        .recipe-item:last-child {
+            border-bottom: none;
+        }
+
+        .recipe-emoji {
+            font-size: 2.5rem;
+            margin-right: 15px;
+        }
+
+        .recipe-info {
+            flex: 1;
+        }
+
+        .recipe-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .recipe-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .save-btn {
+            background: #34C759;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .arrow {
+            font-size: 1.5rem;
+            color: #007AFF;
+        }
+
+        /* Recipe Detail Styles */
+        .recipe-hero {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: -20px -20px 20px -20px;
+        }
+
+        .recipe-hero-emoji {
+            font-size: 4rem;
+            margin-bottom: 10px;
+        }
+
+        .recipe-hero-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .detail-section {
+            margin-bottom: 25px;
+        }
+
+        .detail-section h3 {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .ingredient-list {
+            list-style: none;
+        }
+
+        .ingredient-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .available {
+            color: #34C759;
+        }
+
+        .missing {
+            color: #FF3B30;
+        }
+
+        .steps-list {
+            list-style: none;
+        }
+
+        .steps-list li {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .step-number {
+            background: #007AFF;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .save-recipe-btn {
+            background: #34C759;
+            color: white;
+        }
+
+        .share-btn {
+            background: #007AFF;
+            color: white;
+        }
+
+        /* Navigation */
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        /* Saved Recipes */
+        .saved-recipe-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .saved-recipe-item:hover {
+            background: #f8f9fa;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #FFE5E5;
+            color: #d32f2f;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🥘 Smart Recipe Improviser</h1>
+        </div>
+
+        <!-- Page 1: Home / Ingredient Input -->
+        <div id="homePage" class="page active">
+            <div class="ingredient-section">
+                <h2>Enter Ingredients:</h2>
+                <div class="ingredient-input">
+                    <input type="text" id="ingredientInput" placeholder="Type ingredient..." onkeypress="handleKeyPress(event)">
+                    <button class="add-btn" onclick="addIngredient()">+ Add Ingredient</button>
+                </div>
+
+                <div class="ingredients-display" id="ingredientsDisplay">
+                    <!-- Ingredients will appear here -->
+                </div>
+
+                <button class="find-recipes-btn" id="findRecipesBtn" onclick="findRecipes()" disabled>
+                    Find Recipes
+                </button>
+            </div>
+        </div>
+
+        <!-- Page 2: Recipe Results -->
+        <div id="resultsPage" class="page">
+            <button class="back-btn" onclick="showPage('homePage')">← Back</button>
+            <h2 style="margin-bottom: 20px;">Recipe Results</h2>
+            <div id="recipeResults">
+                <!-- Recipe results will appear here -->
+            </div>
+        </div>
+
+        <!-- Page 3: Recipe Detail -->
+        <div id="detailPage" class="page">
+            <button class="back-btn" onclick="showPage('resultsPage')">← Back to Results</button>
+            <div id="recipeDetail">
+                <!-- Recipe detail will appear here -->
+            </div>
+        </div>
+
+        <!-- Page 4: Saved Recipes -->
+        <div id="savedPage" class="page">
+            <button class="back-btn" onclick="showPage('homePage')">← Back to Home</button>
+            <h2 style="margin-bottom: 20px;">Saved Recipes</h2>
+            <div id="savedRecipes">
+                <!-- Saved recipes will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3001';
+        let ingredients = [];
+        let currentRecipes = [];
+        let savedRecipes = JSON.parse(localStorage.getItem('savedRecipes') || '[]');
+        let currentRecipe = null;
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                addIngredient();
+            }
+        }
+
+        function addIngredient() {
+            const input = document.getElementById('ingredientInput');
+            const ingredient = input.value.trim();
+
+            if (ingredient && !ingredients.includes(ingredient)) {
+                ingredients.push(ingredient);
+                input.value = '';
+                updateIngredientsDisplay();
+                updateFindButton();
+            }
+        }
+
+        function removeIngredient(index) {
+            ingredients.splice(index, 1);
+            updateIngredientsDisplay();
+            updateFindButton();
+        }
+
+        function updateIngredientsDisplay() {
+            const display = document.getElementById('ingredientsDisplay');
+            if (ingredients.length === 0) {
+                display.innerHTML = '<span style="color: #999;">No ingredients added yet...</span>';
+            } else {
+                display.innerHTML = ingredients.map((ingredient, index) => `
+                    <div class="ingredient-tag">
+                        ${ingredient}
+                        <button class="remove-tag" onclick="removeIngredient(${index})">×</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function updateFindButton() {
+            const btn = document.getElementById('findRecipesBtn');
+            btn.disabled = ingredients.length === 0;
+            btn.textContent = ingredients.length === 0 ? 'Add ingredients first' : 'Find Recipes';
+        }
+
+        async function findRecipes() {
+            if (ingredients.length === 0) return;
+
+            showPage('resultsPage');
+            document.getElementById('recipeResults').innerHTML = '<div class="loading">🔄 Finding recipes...</div>';
+
+            try {
+                // Generate multiple recipe variations
+                const recipePromises = [
+                    generateRecipe(ingredients, 'Curry'),
+                    generateRecipe(ingredients, 'Soup'),
+                    generateRecipe(ingredients, 'Stir Fry')
+                ];
+
+                const recipes = await Promise.all(recipePromises);
+                currentRecipes = recipes;
+                displayRecipeResults(recipes);
+            } catch (error) {
+                document.getElementById('recipeResults').innerHTML = `
+                    <div class="error">
+                        ❌ Error finding recipes: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function generateRecipe(ingredients, style) {
+            const response = await fetch(`${API_URL}/api/generate-recipe`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ingredients })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const data = await response.json();
+            if (!data.success) throw new Error(data.message);
+
+            // Customize recipe based on style
+            const recipe = data.recipe;
+            recipe.title = `${ingredients[0]} ${style}`;
+            recipe.style = style;
+            recipe.id = Math.random().toString(36).substr(2, 9);
+
+            return recipe;
+        }
+
+        function displayRecipeResults(recipes) {
+            const emojis = ['🍲', '🥗', '🍜'];
+            const times = ['25 min', '15 min', '20 min'];
+
+            const html = recipes.map((recipe, index) => `
+                <div class="recipe-item" onclick="showRecipeDetail(${index})">
+                    <div class="recipe-emoji">${emojis[index]}</div>
+                    <div class="recipe-info">
+                        <div class="recipe-title">${recipe.title}</div>
+                        <div class="recipe-meta">
+                            <span>Time: ${times[index]}</span>
+                        </div>
+                    </div>
+                    <button class="save-btn" onclick="event.stopPropagation(); saveRecipe(${index})">Save</button>
+                    <div class="arrow">></div>
+                </div>
+            `).join('');
+
+            document.getElementById('recipeResults').innerHTML = html;
+        }
+
+        function showRecipeDetail(index) {
+            currentRecipe = currentRecipes[index];
+            const emojis = ['🍲', '🥗', '🍜'];
+
+            const html = `
+                <div class="recipe-hero">
+                    <div class="recipe-hero-emoji">${emojis[index]}</div>
+                    <div class="recipe-hero-title">${currentRecipe.title}</div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Ingredients:</h3>
+                    <ul class="ingredient-list">
+                        ${currentRecipe.ingredients.map(ing => `
+                            <li>
+                                <span class="${ing.available ? 'available' : 'missing'}">
+                                    ${ing.available ? '✅' : '❌'} ${ing.name}
+                                </span>
+                                ${!ing.available ? '<span class="missing">(missing)</span>' : ''}
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Steps:</h3>
+                    <ol class="steps-list">
+                        ${currentRecipe.instructions.map((step, i) => `
+                            <li>
+                                <div class="step-number">${i + 1}</div>
+                                <div>${step}</div>
+                            </li>
+                        `).join('')}
+                    </ol>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn save-recipe-btn" onclick="saveCurrentRecipe()">Save Recipe</button>
+                    <button class="action-btn share-btn" onclick="shareRecipe()">Share</button>
+                </div>
+            `;
+
+            document.getElementById('recipeDetail').innerHTML = html;
+            showPage('detailPage');
+        }
+
+        function saveRecipe(index) {
+            const recipe = currentRecipes[index];
+            if (!savedRecipes.find(r => r.id === recipe.id)) {
+                savedRecipes.push(recipe);
+                localStorage.setItem('savedRecipes', JSON.stringify(savedRecipes));
+                alert('Recipe saved!');
+            } else {
+                alert('Recipe already saved!');
+            }
+        }
+
+        function saveCurrentRecipe() {
+            if (currentRecipe && !savedRecipes.find(r => r.id === currentRecipe.id)) {
+                savedRecipes.push(currentRecipe);
+                localStorage.setItem('savedRecipes', JSON.stringify(savedRecipes));
+                alert('Recipe saved!');
+            } else {
+                alert('Recipe already saved!');
+            }
+        }
+
+        function shareRecipe() {
+            if (navigator.share) {
+                navigator.share({
+                    title: currentRecipe.title,
+                    text: `Check out this recipe: ${currentRecipe.title}`,
+                    url: window.location.href
+                });
+            } else {
+                alert('Recipe link copied to clipboard!');
+            }
+        }
+
+        function showSavedRecipes() {
+            showPage('savedPage');
+            displaySavedRecipes();
+        }
+
+        function displaySavedRecipes() {
+            const display = document.getElementById('savedRecipes');
+
+            if (savedRecipes.length === 0) {
+                display.innerHTML = '<div style="text-align: center; color: #999; padding: 40px;">No saved recipes yet</div>';
+                return;
+            }
+
+            const emojis = ['🍲', '🥗', '🍜', '🍝', '🥙'];
+
+            const html = savedRecipes.map((recipe, index) => `
+                <div class="saved-recipe-item" onclick="viewSavedRecipe(${index})">
+                    <div class="recipe-emoji">${emojis[index % emojis.length]}</div>
+                    <div class="recipe-info">
+                        <div class="recipe-title">${recipe.title}</div>
+                    </div>
+                    <div class="arrow">></div>
+                </div>
+            `).join('');
+
+            display.innerHTML = html;
+        }
+
+        function viewSavedRecipe(index) {
+            currentRecipe = savedRecipes[index];
+            const emojis = ['🍲', '🥗', '🍜', '🍝', '🥙'];
+
+            const html = `
+                <div class="recipe-hero">
+                    <div class="recipe-hero-emoji">${emojis[index % emojis.length]}</div>
+                    <div class="recipe-hero-title">${currentRecipe.title}</div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Ingredients:</h3>
+                    <ul class="ingredient-list">
+                        ${currentRecipe.ingredients.map(ing => `
+                            <li>
+                                <span class="${ing.available ? 'available' : 'missing'}">
+                                    ${ing.available ? '✅' : '❌'} ${ing.name}
+                                </span>
+                                ${!ing.available ? '<span class="missing">(missing)</span>' : ''}
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Steps:</h3>
+                    <ol class="steps-list">
+                        ${currentRecipe.instructions.map((step, i) => `
+                            <li>
+                                <div class="step-number">${i + 1}</div>
+                                <div>${step}</div>
+                            </li>
+                        `).join('')}
+                    </ol>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn share-btn" onclick="shareRecipe()">Share</button>
+                </div>
+            `;
+
+            document.getElementById('recipeDetail').innerHTML = html;
+            showPage('detailPage');
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        // Add navigation to header
+        document.querySelector('.header').innerHTML += `
+            <div style="margin-top: 10px;">
+                <button onclick="showPage('homePage')" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 5px 10px; margin: 0 5px; border-radius: 15px; cursor: pointer;">Home</button>
+                <button onclick="showSavedRecipes()" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 5px 10px; margin: 0 5px; border-radius: 15px; cursor: pointer;">Saved</button>
+            </div>
+        `;
+
+        // Initialize
+        updateIngredientsDisplay();
+        updateFindButton();
+
+        // Test API connection
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch(`${API_URL}/api/health`);
+                if (!response.ok) throw new Error('API not responding');
+                console.log('✅ Backend API connected');
+            } catch (error) {
+                console.error('❌ Backend API connection failed:', error);
+            }
+        });
+    </script>
+</body>
+</html>
