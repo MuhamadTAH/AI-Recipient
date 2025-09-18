@@ -28,7 +28,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #007AFF;
             color: white;
             padding: 20px;
             text-align: center;
@@ -38,12 +38,6 @@
         .header h1 {
             font-size: 1.5rem;
             font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .header .tagline {
-            font-size: 0.9rem;
-            opacity: 0.9;
         }
 
         .page {
@@ -173,7 +167,18 @@
             color: #666;
         }
 
-        /* Other page styles remain the same */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state .emoji {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        /* Ingredient Page Styles */
         .ingredient-section h2 {
             font-size: 1.2rem;
             margin-bottom: 15px;
@@ -397,7 +402,7 @@
             margin-top: 20px;
         }
 
-        .action-btn-detail {
+        .action-btn {
             flex: 1;
             padding: 12px;
             border: none;
@@ -427,34 +432,6 @@
             margin-bottom: 15px;
         }
 
-        .bottom-nav {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255,255,255,0.95);
-            border-radius: 25px;
-            padding: 10px 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
-        }
-
-        .nav-btn {
-            background: transparent;
-            border: none;
-            padding: 8px 15px;
-            margin: 0 5px;
-            border-radius: 15px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-        }
-
-        .nav-btn.active {
-            background: #667eea;
-            color: white;
-        }
-
         /* Saved Recipes */
         .saved-recipe-item {
             display: flex;
@@ -481,17 +458,6 @@
             border-radius: 8px;
             margin: 15px 0;
         }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
-        }
-
-        .empty-state .emoji {
-            font-size: 3rem;
-            margin-bottom: 15px;
-        }
     </style>
 </head>
 <body>
@@ -499,7 +465,6 @@
         <!-- Header -->
         <div class="header">
             <h1>🥘 Smart Recipe Improviser</h1>
-            <div class="tagline">Turn your ingredients into delicious meals</div>
         </div>
 
         <!-- Page 1: Dashboard -->
@@ -544,12 +509,11 @@
 
         <!-- Page 2: Ingredient Input -->
         <div id="ingredientPage" class="page">
-            <button class="back-btn" onclick="showPage('dashboardPage')">← Dashboard</button>
             <div class="ingredient-section">
-                <h2>What ingredients do you have?</h2>
+                <h2>Enter Ingredients:</h2>
                 <div class="ingredient-input">
                     <input type="text" id="ingredientInput" placeholder="Type ingredient..." onkeypress="handleKeyPress(event)">
-                    <button class="add-btn" onclick="addIngredient()">+ Add</button>
+                    <button class="add-btn" onclick="addIngredient()">+ Add Ingredient</button>
                 </div>
 
                 <div class="ingredients-display" id="ingredientsDisplay">
@@ -562,16 +526,16 @@
             </div>
         </div>
 
-        <!-- Page 3: Recipe Results -->
+        <!-- Page 2: Recipe Results -->
         <div id="resultsPage" class="page">
-            <button class="back-btn" onclick="showPage('ingredientPage')">← Back</button>
+            <button class="back-btn" onclick="showPage('dashboardPage')">← Dashboard</button>
             <h2 style="margin-bottom: 20px;">Recipe Results</h2>
             <div id="recipeResults">
                 <!-- Recipe results will appear here -->
             </div>
         </div>
 
-        <!-- Page 4: Recipe Detail -->
+        <!-- Page 3: Recipe Detail -->
         <div id="detailPage" class="page">
             <button class="back-btn" onclick="showPage('resultsPage')">← Back to Results</button>
             <div id="recipeDetail">
@@ -579,7 +543,7 @@
             </div>
         </div>
 
-        <!-- Page 5: Saved Recipes -->
+        <!-- Page 4: Saved Recipes -->
         <div id="savedPage" class="page">
             <button class="back-btn" onclick="showPage('dashboardPage')">← Dashboard</button>
             <h2 style="margin-bottom: 20px;">Saved Recipes</h2>
@@ -587,13 +551,6 @@
                 <!-- Saved recipes will appear here -->
             </div>
         </div>
-    </div>
-
-    <!-- Bottom Navigation -->
-    <div class="bottom-nav">
-        <button class="nav-btn active" onclick="showPage('dashboardPage')" id="dashboardNav">🏠 Home</button>
-        <button class="nav-btn" onclick="showPage('ingredientPage')" id="createNav">🔍 Create</button>
-        <button class="nav-btn" onclick="showSavedRecipes()" id="savedNav">💾 Saved</button>
     </div>
 
     <script>
@@ -634,6 +591,13 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        function viewSavedRecipeFromDashboard(recipeId) {
+            const index = savedRecipes.findIndex(r => r.id === recipeId);
+            if (index !== -1) {
+                viewSavedRecipe(index);
+            }
         }
 
         function handleKeyPress(event) {
@@ -687,6 +651,7 @@
             document.getElementById('recipeResults').innerHTML = '<div class="loading">🔄 Finding recipes...</div>';
 
             try {
+                // Generate multiple recipe variations
                 const recipePromises = [
                     generateRecipe(ingredients, 'Curry'),
                     generateRecipe(ingredients, 'Soup'),
@@ -720,6 +685,7 @@
             const data = await response.json();
             if (!data.success) throw new Error(data.message);
 
+            // Customize recipe based on style
             const recipe = data.recipe;
             recipe.title = `${ingredients[0]} ${style}`;
             recipe.style = style;
@@ -786,8 +752,8 @@
                 </div>
 
                 <div class="action-buttons">
-                    <button class="action-btn-detail save-recipe-btn" onclick="saveCurrentRecipe()">Save Recipe</button>
-                    <button class="action-btn-detail share-btn" onclick="shareRecipe()">Share</button>
+                    <button class="action-btn save-recipe-btn" onclick="saveCurrentRecipe()">Save Recipe</button>
+                    <button class="action-btn share-btn" onclick="shareRecipe()">Share</button>
                 </div>
             `;
 
@@ -835,22 +801,13 @@
         function showSavedRecipes() {
             showPage('savedPage');
             displaySavedRecipes();
-            updateNavigation('savedNav');
         }
 
         function displaySavedRecipes() {
             const display = document.getElementById('savedRecipes');
 
             if (savedRecipes.length === 0) {
-                display.innerHTML = `
-                    <div class="empty-state">
-                        <div class="emoji">📚</div>
-                        <p>No saved recipes yet</p>
-                        <button class="action-btn" onclick="showPage('ingredientPage')" style="margin-top: 15px; width: 200px;">
-                            Start Creating Recipes
-                        </button>
-                    </div>
-                `;
+                display.innerHTML = '<div style="text-align: center; color: #999; padding: 40px;">No saved recipes yet</div>';
                 return;
             }
 
@@ -906,7 +863,7 @@
                 </div>
 
                 <div class="action-buttons">
-                    <button class="action-btn-detail share-btn" onclick="shareRecipe()">Share Recipe</button>
+                    <button class="action-btn share-btn" onclick="shareRecipe()">Share</button>
                 </div>
             `;
 
@@ -914,30 +871,18 @@
             showPage('detailPage');
         }
 
-        function viewSavedRecipeFromDashboard(recipeId) {
-            const index = savedRecipes.findIndex(r => r.id === recipeId);
-            if (index !== -1) {
-                viewSavedRecipe(index);
-            }
-        }
-
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
-            updateNavigation(pageId);
         }
 
-        function updateNavigation(pageId) {
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-
-            if (pageId === 'dashboardPage') {
-                document.getElementById('dashboardNav').classList.add('active');
-            } else if (pageId === 'ingredientPage') {
-                document.getElementById('createNav').classList.add('active');
-            } else if (pageId === 'savedPage') {
-                document.getElementById('savedNav').classList.add('active');
-            }
-        }
+        // Add navigation to header
+        document.querySelector('.header').innerHTML += `
+            <div style="margin-top: 10px;">
+                <button onclick="showPage('dashboardPage')" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 5px 10px; margin: 0 5px; border-radius: 15px; cursor: pointer;">Home</button>
+                <button onclick="showSavedRecipes()" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 5px 10px; margin: 0 5px; border-radius: 15px; cursor: pointer;">Saved</button>
+            </div>
+        `;
 
         // Initialize
         updateIngredientsDisplay();
