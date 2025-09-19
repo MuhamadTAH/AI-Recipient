@@ -40,7 +40,8 @@ app.get('/', (req, res) => {
   res.json({
     success: true,
     message: '🥘 AI Recipe Improviser API',
-    version: '1.0.0',
+    version: '1.0.1',
+    status: 'OpenAI API Key Configured',
     endpoints: {
       health: '/api/health',
       recipes: '/api/recipes',
