@@ -14,7 +14,13 @@
       "Bash(git add:*)",
       "Bash(git config:*)",
       "Bash(git remote add:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(start index.html)",
+      "Bash(copy:*)",
+      "Bash(npm install:*)",
+      "Bash(node server.js)",
+      "Bash(taskkill:*)",
+      "Bash(PORT=3002 node server.js)"
     ],
     "deny": [],
     "ask": []

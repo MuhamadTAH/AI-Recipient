@@ -986,10 +986,10 @@
 
                     <div class="suggestion-cards">
                         <div class="suggestion-card" onclick="handleSuggestion('dinner')">
-                            <strong>What can I make for dinner tonight?</strong>
+                            <strong>What can I make for dinner with my pantry ingredients?</strong>
                         </div>
                         <div class="suggestion-card" onclick="handleSuggestion('ingredients')">
-                            <strong>Use 10 ingredients to make something delicious</strong>
+                            <strong>Use my pantry ingredients to make something delicious</strong>
                         </div>
                     </div>
 
@@ -1702,33 +1702,103 @@
             document.getElementById('createdCount').textContent = recipesCreatedCount;
         }
 
-        function handleSuggestion(type) {
+        async function handleSuggestion(type) {
+            let message = '';
+
             if (type === 'dinner') {
                 if (pantryItems.length > 0) {
-                    quickCook();
+                    message = `What can I make for dinner tonight using my pantry ingredients: ${pantryItems.join(', ')}?`;
                 } else {
                     alert('Add some ingredients to your pantry first!');
                     switchTab('pantryTab', document.querySelector('.nav-tab:nth-child(3)'));
+                    return;
                 }
             } else if (type === 'ingredients') {
-                if (pantryItems.length >= 10) {
-                    quickCook();
+                if (pantryItems.length > 0) {
+                    message = `Give me a delicious recipe using these ${pantryItems.length} ingredients from my pantry: ${pantryItems.join(', ')}. What else do I need to buy?`;
                 } else {
-                    alert(`You have ${pantryItems.length} ingredients. Add ${10 - pantryItems.length} more for this suggestion!`);
+                    alert('Add some ingredients to your pantry first, then I can suggest recipes!');
                     switchTab('pantryTab', document.querySelector('.nav-tab:nth-child(3)'));
+                    return;
                 }
             }
+
+            // Simulate the chat input
+            const chatInput = document.querySelector('.ai-chat-input');
+            chatInput.value = message;
+
+            // Trigger the AI chat
+            const event = { key: 'Enter', target: chatInput };
+            await handleAIChat(event);
         }
 
-        function handleAIChat(event) {
+        async function handleAIChat(event) {
             if (event.key === 'Enter') {
                 const input = event.target;
                 const message = input.value.trim();
                 if (message) {
-                    alert(`AI Chef: "${message}"\n\nThis feature will connect to your AI backend for personalized recipe suggestions!`);
-                    input.value = '';
+                    // Show loading state
+                    input.disabled = true;
+                    input.placeholder = 'AI Chef is thinking...';
+
+                    try {
+                        const response = await fetch(`${API_URL}/api/ai-chat`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                message: message,
+                                pantryItems: pantryItems
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            // Show AI response in a nice modal or alert
+                            showAIResponse(message, data.response);
+                        } else {
+                            alert('AI Chef: Sorry, I had trouble understanding your request. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('AI Chat error:', error);
+                        alert('AI Chef: I\'m having trouble connecting right now. Please try again in a moment.');
+                    } finally {
+                        // Reset input
+                        input.disabled = false;
+                        input.placeholder = 'Ask AI Chef anything...';
+                        input.value = '';
+                    }
                 }
             }
+        }
+
+        function showAIResponse(userMessage, aiResponse) {
+            const modal = document.getElementById('recipeDetailModal');
+            modal.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000;" onclick="closeAIResponseModal()">
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 15px; max-width: 350px; width: 90%; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center;">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">🤖</div>
+                            <div style="font-size: 1.2rem; font-weight: bold;">AI Chef Response</div>
+                            <button onclick="closeAIResponseModal()" style="position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 16px; cursor: pointer; color: white;">×</button>
+                        </div>
+                        <div style="padding: 20px;">
+                            <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 3px solid #007AFF;">
+                                <strong>You asked:</strong> "${userMessage}"
+                            </div>
+                            <div style="line-height: 1.6; white-space: pre-wrap;">${aiResponse}</div>
+                            <button onclick="closeAIResponseModal()" style="width: 100%; background: #007AFF; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 20px; cursor: pointer;">Got it!</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'block';
+        }
+
+        function closeAIResponseModal() {
+            document.getElementById('recipeDetailModal').style.display = 'none';
         }
 
         function showRecipeDetail(recipeId) {

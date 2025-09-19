@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { OpenAI } = require('openai');
 require('dotenv').config();
 
 const app = express();
@@ -19,6 +20,11 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 let savedRecipes = [];
 let recipeIdCounter = 1;
+
+// Initialize OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 app.get('/', (req, res) => {
   res.json({
@@ -153,6 +159,61 @@ app.get('/api/health', (req, res) => {
     message: 'Recipe API is running!',
     timestamp: new Date().toISOString()
   });
+});
+
+// AI Chat endpoint
+app.post('/api/ai-chat', async (req, res) => {
+  const { message, pantryItems = [] } = req.body;
+
+  if (!message || message.trim().length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please provide a message'
+    });
+  }
+
+  try {
+    const systemPrompt = `You are an AI Chef assistant for a recipe app. Your main job is to help users cook with the ingredients they already have.
+
+🥫 USER'S PANTRY INGREDIENTS: ${pantryItems.length > 0 ? pantryItems.join(', ') : 'No ingredients in pantry yet'}
+
+IMPORTANT INSTRUCTIONS:
+- ALWAYS prioritize using the ingredients from the user's pantry
+- When suggesting recipes, mention specifically which pantry ingredients to use
+- If the user's pantry is empty, encourage them to add ingredients first
+- Suggest what additional ingredients they might need to buy
+- Give step-by-step cooking instructions
+- Keep responses practical and easy to follow
+- Focus only on cooking, recipes, and food-related questions
+
+If the user asks general cooking questions without specifying ingredients, automatically suggest recipes using their current pantry items.`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: message }
+      ],
+      max_tokens: 500,
+      temperature: 0.7,
+    });
+
+    const aiResponse = completion.choices[0].message.content;
+
+    res.json({
+      success: true,
+      response: aiResponse,
+      pantryContext: pantryItems.length
+    });
+
+  } catch (error) {
+    console.error('OpenAI API error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Sorry, I had trouble processing your request. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
 });
 
 app.use((req, res) => {
