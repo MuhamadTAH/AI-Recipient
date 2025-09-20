@@ -36,35 +36,16 @@ function App() {
     setIsLoading(true)
 
     try {
-      // API key reconstruction
-      const apiKeyParts = [
-        'sk-ant-api03-dPpRIzkhJlxlDh3opeiGK4zEeg9PhF4pi',
-        'Anz2uqVsvSZQu-bOeatfQO6Xudm4GONtsA3ntxSd1Zj',
-        'GIrZaZLkw-LxzwUgAA'
-      ];
-      const apiKey = apiKeyParts.join('');
+      // Use backend API - replace with your actual backend URL
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://your-backend-service.onrender.com';
 
-      const response = await axios.post('https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages', {
-        model: 'claude-3-sonnet-20240229',
-        max_tokens: 1000,
-        messages: [
-          {
-            role: 'user',
-            content: inputValue
-          }
-        ]
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'X-Requested-With': 'XMLHttpRequest'
-        }
+      const response = await axios.post(`${backendUrl}/api/chat`, {
+        message: inputValue
       })
 
       const botMessage = {
         id: Date.now() + 1,
-        text: response.data.content[0].text,
+        text: response.data.response,
         sender: 'bot'
       }
 
