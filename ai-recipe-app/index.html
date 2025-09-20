@@ -1190,8 +1190,16 @@
         }
 
         function updateStats() {
-            document.getElementById('recipesCreated').textContent = recipesCreatedCount;
-            document.getElementById('recipesSaved').textContent = savedRecipes.length;
+            // Safely update stats elements if they exist
+            const createdElement = document.getElementById('createdCount');
+            if (createdElement) {
+                createdElement.textContent = recipesCreatedCount;
+            }
+
+            const savedElement = document.getElementById('savedCount');
+            if (savedElement) {
+                savedElement.textContent = savedRecipes.length;
+            }
         }
 
         // Plan Tab Functions
